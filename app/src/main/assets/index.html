@@ -80,6 +80,14 @@ td small{display:block; font-size:.92rem; font-weight:600; opacity:.85}
 .sup{max-width:34rem; margin:0 auto 1rem}
 .sup label{display:block; margin-bottom:.4rem; font-weight:700; text-align:center}
 .sup select{width:100%; min-height:3rem; padding:.4rem .8rem; font:inherit; font-weight:700; color:var(--ink); background:var(--card); border:3px solid var(--line); border-radius:14px}
+.rem{max-width:34rem; margin:0 auto 1rem; padding:.8rem 1rem; background:var(--card); border:3px solid var(--line); border-radius:16px}
+.rem label{display:flex; align-items:center; gap:.7rem; font-weight:700}
+.rem input[type="checkbox"]{width:1.4rem; height:1.4rem; accent-color:var(--ink)}
+.rem select{margin-top:.6rem; width:100%; min-height:2.8rem; padding:.3rem .7rem; font:inherit; font-weight:700; color:var(--ink); background:var(--card); border:2px solid var(--line); border-radius:12px}
+.rem p{margin:.6rem 0 0; font-size:.95rem}
+.rem p:empty{display:none}
+#remSet{margin-top:.6rem; min-height:2.6rem; padding:.3rem 1.2rem; font:inherit; font-weight:800; color:var(--ink); background:var(--y); border:2px solid var(--line); border-radius:12px; cursor:pointer}
+#remSet[hidden]{display:none}
 .next{margin:1rem 0; padding:.7rem 1rem; background:var(--card); border:3px solid var(--line); border-inline-start-width:10px; border-radius:16px; box-shadow:4px 4px 0 var(--line)}
 .next.now{background:var(--g)}
 .next small{display:block; font-weight:700; opacity:.8}
@@ -125,6 +133,17 @@ td small{display:block; font-size:.92rem; font-weight:600; opacity:.85}
     </div>
   </fieldset>
   <div class="sup"><label for="sup">مشرف مشروع التخرج (اختياري)</label><select id="sup"></select></div>
+  <div class="rem" id="rem" hidden>
+    <label><input type="checkbox" id="remOn"><span>ذكّرني بمحاضراتي</span></label>
+    <select id="remLead" aria-label="وقت التذكير قبل المحاضرة">
+      <option value="10">قبلها بـ 10 دقائق</option>
+      <option value="15">قبلها بـ 15 دقيقة</option>
+      <option value="30">قبلها بـ 30 دقيقة</option>
+      <option value="60">قبلها بساعة</option>
+    </select>
+    <p id="remNote" aria-live="polite"></p>
+    <button type="button" id="remSet" hidden>فتح إعدادات الإشعارات</button>
+  </div>
   <div class="bar" id="gpBar">
     <button type="button" id="gpBtn">إظهار مشروع التخرج فقط</button>
   </div>
@@ -295,8 +314,8 @@ if (SUPS.includes(ss)) state.sup = ss;
 sel.value = state.sup;
 
 document.querySelectorAll('input[name="grp"]').forEach(r =>
-  r.addEventListener("change", () => { state.g = +r.value; state.gp = false; store.set("grp", r.value); render(); }));
-sel.addEventListener("change", () => { state.sup = sel.value; state.gp = false; store.set("sup", sel.value); render(); });
+  r.addEventListener("change", () => { state.g = +r.value; state.gp = false; store.set("grp", r.value); render(); syncReminders(); }));
+sel.addEventListener("change", () => { state.sup = sel.value; state.gp = false; store.set("sup", sel.value); render(); syncReminders(); });
 $("gpBtn").addEventListener("click", () => { state.gp = !state.gp; render(); });
 $("toggle").addEventListener("click", () => { state.open = !state.open; sync(); });
 
@@ -319,6 +338,44 @@ $("copy").addEventListener("click", async () => {
   btn.textContent = ok ? "تم النسخ" : "تعذّر النسخ";
   setTimeout(() => { btn.textContent = "نسخ جدولي"; }, 1800);
 });
+
+// ----- التذكيرات (تظهر داخل تطبيق الأندرويد فقط) -----
+const AB = window.AndroidBridge;
+const mine = () => (state.g ? pick(x => x === state.g) : [])
+  .concat(state.sup ? grad().filter(x => x.e.t === state.sup) : []).sort(cmp);
+const rem = {on: store.get("remOn") === "1", lead: +store.get("remLead") || 15};
+const notifOk = () => { try { return !!JSON.parse(AB.status()).notif; } catch (e) { return false; } };
+
+function syncReminders(){
+  if (!AB) return;
+  const rows = mine();
+  let note = "";
+  $("remOn").checked = rem.on;
+  $("remLead").value = String(rem.lead);
+  $("remSet").hidden = true;
+  if (!rem.on) AB.clearReminders();
+  else if (!notifOk()){ AB.clearReminders(); note = "الإشعارات غير مفعّلة للتطبيق، فعّلها ليصلك التذكير."; $("remSet").hidden = false; }
+  else if (!rows.length){ AB.clearReminders(); note = "اختر مجموعتك أولًا لتصلك تذكيرات محاضراتك."; }
+  else {
+    AB.setReminders(JSON.stringify({lead: rem.lead, items: rows.map(x => ({dow: x.e.d ? 4 : 1, m: start(x.t), s: x.e.s, t: x.e.t, p: x.e.p, tm: fmt(x.t)}))}));
+    const n = rows.length === 1 ? "محاضرة واحدة" : rows.length === 2 ? "محاضرتين" : rows.length + " محاضرات";
+    note = `تم ضبط التذكير لـ ${n} أسبوعيًا (${$("remLead").selectedOptions[0].textContent}).`;
+  }
+  $("remNote").textContent = note;
+}
+
+if (AB){
+  $("rem").hidden = false;
+  $("remOn").addEventListener("change", () => {
+    rem.on = $("remOn").checked; store.set("remOn", rem.on ? "1" : "0");
+    if (rem.on && !notifOk()) AB.requestPermission(); // النتيجة تصل عبر onNotifPermission
+    syncReminders();
+  });
+  $("remLead").addEventListener("change", () => { rem.lead = +$("remLead").value; store.set("remLead", String(rem.lead)); syncReminders(); });
+  $("remSet").addEventListener("click", () => AB.openSettings());
+  window.onNotifPermission = () => syncReminders();
+  syncReminders();
+}
 
 render();
 setInterval(renderNext, 60000);
