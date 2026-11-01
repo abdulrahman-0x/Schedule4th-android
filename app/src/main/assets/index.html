@@ -88,6 +88,19 @@ td small{display:block; font-size:.92rem; font-weight:600; opacity:.85}
 .rem p:empty{display:none}
 #remSet{margin-top:.6rem; min-height:2.6rem; padding:.3rem 1.2rem; font:inherit; font-weight:800; color:var(--ink); background:var(--y); border:2px solid var(--line); border-radius:12px; cursor:pointer}
 #remSet[hidden]{display:none}
+.chip{display:inline-block; padding:0 .6rem; border:2px solid var(--line); border-radius:99px; font-weight:700; font-size:.9rem}
+.chip.ok{background:var(--g)} .chip.no{background:var(--k)}
+.soon{font-size:.9rem; opacity:.75}
+.att button,#att button{font:inherit; font-weight:700; color:var(--ink); min-height:2.2rem; padding:.1rem .8rem; border:2px solid var(--line); border-radius:10px; cursor:pointer}
+.att button+button,.att .chip+button{margin-inline-start:.4rem}
+.b-ok{background:var(--g)} .b-no{background:var(--k)}
+.att button.lnk,#att button.lnk{background:none; border:0; text-decoration:underline; min-height:0; padding:0 .4rem}
+#att button:disabled{opacity:.5; cursor:not-allowed}
+#att{margin:1rem 0}
+#att .sum{display:flex; flex-wrap:wrap; align-items:center; gap:.3rem 1rem; padding:.7rem 1rem; background:var(--card); border:3px solid var(--line); border-radius:16px}
+#att .sum b{font-size:1.1rem}
+#att .mk{margin-top:.7rem; padding:.7rem 1rem; background:var(--k); border:3px solid var(--line); border-radius:16px; line-height:1.9}
+#att .mk .acts{display:flex; gap:.5rem; margin-top:.4rem}
 .next{margin:1rem 0; padding:.7rem 1rem; background:var(--card); border:3px solid var(--line); border-inline-start-width:10px; border-radius:16px; box-shadow:4px 4px 0 var(--line)}
 .next.now{background:var(--g)}
 .next small{display:block; font-weight:700; opacity:.8}
@@ -150,6 +163,7 @@ td small{display:block; font-size:.92rem; font-weight:600; opacity:.85}
 
   <p id="note" aria-live="polite"></p>
   <div class="next" id="next" hidden></div>
+  <div id="att" hidden></div>
   <div class="tabs" id="tabs" role="group" aria-label="اليوم" hidden>
     <button type="button" data-day="0">الإثنين</button><button type="button" data-day="1">الخميس</button>
   </div>
@@ -208,16 +222,16 @@ const grad = () => pick(() => true).filter(x => x.e.s === "مشروع التخر
 const bare = n => n.replace(/^[^/]*\/\s*/, "");
 const SUPS = [...new Set(E.filter(e => e.s === "مشروع التخرج").map(e => e.t))].sort((a,b) => bare(a).localeCompare(bare(b), "ar"));
 
-function table(rows){
+function table(rows, att){
   const hg = rows.some(x => x.g); // جدول مشروع التخرج وحده يُعرض بدون عمود المجموعة
   return DAYS.map((day,di) => {
     const r = rows.filter(x => x.e.d === di);
     if (!r.length) return "";
-    return `<div class="day" data-d="${di}"><h3>يوم ${day}</h3><table><thead><tr><th>المادة</th><th>المكان</th>${hg ? "<th>المجموعة</th>" : ""}<th>الوقت</th></tr></thead><tbody>` +
+    return `<div class="day" data-d="${di}"><h3>يوم ${day}</h3><table><thead><tr><th>المادة</th><th>المكان</th>${hg ? "<th>المجموعة</th>" : ""}<th>الوقت</th>${att ? "<th>الحضور</th>" : ""}</tr></thead><tbody>` +
       r.map(x => `<tr class="c-${x.e.c}"><td><b>${x.e.s}</b><small>${x.e.t}</small></td>` +
         `<td data-l="المكان">${x.e.p}</td>` +
         (hg ? `<td data-l="المجموعة">${x.g ? `<span class="gb">مجموعة ${x.g}</span>` : ""}</td>` : "") +
-        `<td data-l="الوقت"><span class="tm">${fmt(x.t)}</span></td></tr>`).join("") +
+        `<td data-l="الوقت"><span class="tm">${fmt(x.t)}</span></td>${att ? attCell(x) : ""}</tr>`).join("") +
       `</tbody></table></div>`;
   }).join("");
 }
@@ -265,14 +279,14 @@ function render(){
   const rows = state.gp ? grad() : (g ? pick(x => x === g) : []).concat(supRows).sort(cmp);
   const head = state.gp ? "مواعيد مشروع التخرج" : g ? `جدول المجموعة ${NAME[g]}` : "جدولي";
   view.rows = rows;
-  $("main").innerHTML = rows.length ? `<h2>${head}</h2>` + table(rows) : "";
+  $("main").innerHTML = rows.length ? `<h2>${head}</h2>` + table(rows, !state.gp) : "";
   $("tabs").hidden = !rows.length;
   $("bar").hidden = state.gp || !rows.length;
   $("toggle").hidden = !g;
   $("rest").hidden = true;
   if (!g || state.gp){
     $("note").textContent = (!g && !state.gp) ? "اختر المجموعة الأولى أو الثانية ليظهر جدولك." : "";
-    renderNext();
+    renderNext(); renderAtt();
     return;
   }
   const o = 3 - g, other = pick(x => x === o), gradRows = grad().filter(x => x.e.t !== state.sup);
@@ -281,7 +295,7 @@ function render(){
     `<h2>مواعيد المجموعة ${NAME[o]}</h2>` + table(other) +
     `<h2>مواعيد مشروع التخرج${state.sup ? " (باقي المشرفين)" : ""}</h2>` + table(gradRows);
   sync();
-  renderNext();
+  renderNext(); renderAtt();
 }
 
 // ----- الوضع الفاتح / الداكن -----
@@ -377,8 +391,125 @@ if (AB){
   syncReminders();
 }
 
+// ----- تسجيل الحضور (الأسبوع يبدأ الإثنين، والسجل محفوظ في الجهاز) -----
+// a = حضرت | m = فاتتني | k = حضرت البديل (تعويض)
+let att = {};   // {"2026-11-02": {"<مفتاح المحاضرة>": "a"}}
+try { att = JSON.parse(store.get("att") || "{}") || {}; } catch (e) { att = {}; }
+const saveAtt = () => store.set("att", JSON.stringify(att));
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const weekKey = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - (x.getDay() + 6) % 7); return iso(x); };
+const rowKey = x => [x.e.d, x.t, x.e.s, x.e.t].join("|");
+const occAt = (wk, x) => {   // بداية ونهاية المحاضرة x في الأسبوع الذي يبدأ بالتاريخ wk
+  const day = new Date(wk + "T00:00:00"); day.setDate(day.getDate() + (x.e.d ? 3 : 0));
+  const s = new Date(day), e = new Date(day), a = start(x.t), b = end(x.t);
+  s.setHours(Math.floor(a / 60), a % 60, 0, 0); e.setHours(Math.floor(b / 60), b % 60, 0, 0);
+  return {s, e};
+};
+const dm = new Intl.DateTimeFormat("ar-EG-u-nu-latn", {day: "numeric", month: "long"});
+const todayIdx = () => { const d = new Date().getDay(); return d === 1 ? 0 : d === 4 ? 1 : -1; }; // 0=الإثنين 1=الخميس
+const overlap = (a, b) => start(a.t) < end(b.t) && start(b.t) < end(a.t);
+let sig = "";
+
+// ----- التعويض: كل المواعيد البديلة المتاحة (المجموعة الأخرى، نفس المادة) -----
+const COMP_WEEKS = 2;   // الفترة المسموح بها: أسبوع المحاضرة الفائتة + الأسبوع التالي
+const COMP_DAYS = 14;
+
+function altsOf(row, w){
+  const o = row.e.sl.find(s => s[0] && s[0] !== row.g);
+  if (!o) return [];
+  const a = {e: row.e, g: o[0], t: o[1]}, now = new Date(), out = [];
+  const base = new Date(w + "T00:00:00");
+  for (let n = 0; n < COMP_WEEKS; n++){
+    const d = new Date(base); d.setDate(d.getDate() + n*7);
+    const oc = occAt(iso(d), a);
+    if (oc.e <= now) continue;                       // فات وقته
+    if (oc.s - now > COMP_DAYS*864e5) continue;      // خارج الفترة المسموح بها
+    out.push({row: a, oc, wk: iso(d), live: oc.s <= now});
+  }
+  return out;
+}
+const altOf = (row, w) => altsOf(row, w)[0] || null;
+
+function missedList(){
+  const all = pick(() => true), out = [];
+  Object.keys(att).sort().forEach(w => Object.keys(att[w]).forEach(k => {
+    const row = att[w][k] === "m" ? all.find(x => rowKey(x) === k) : null;
+    if (row) out.push({w, k, row});
+  }));
+  return out;
+}
+
+// ----- عدّاد اليوم: محاضرات اليوم نفسه فقط -----
+function dayStats(){
+  const di = todayIdx(), wk = weekKey(new Date()), cur = att[wk] || {}, now = new Date();
+  const rows = di < 0 ? [] : mine().filter(x => x.e.d === di);
+  const done = rows.filter(x => cur[rowKey(x)] === "a" || cur[rowKey(x)] === "k").length;
+  const left = rows.filter(x => { const k = rowKey(x); return cur[k] !== "a" && cur[k] !== "k" && occAt(wk, x).e > now; }).length;
+  return {di, rows, done, left, missed: rows.filter(x => cur[rowKey(x)] === "m").length};
+}
+
+function attCell(x){
+  const wk = weekKey(new Date()), k = rowKey(x), st = (att[wk] || {})[k], d = `data-k="${k}" data-w="${wk}"`;
+  let h;
+  if (st === "a" || st === "k") h = `<span class="chip ok">${st === "k" ? "حضرت (تعويض)" : "حضرت"}</span><button type="button" class="lnk" data-act="undo" ${d}>تراجع</button>`;
+  else if (st === "m") h = `<span class="chip no">فاتتني</span><button type="button" class="lnk" data-act="undo" ${d}>تراجع</button>`;
+  else if (occAt(wk, x).s > new Date()) h = `<span class="soon">لم تبدأ بعد</span>`;
+  else h = `<button type="button" class="b-ok" data-act="a" ${d}>حضرت</button><button type="button" class="b-no" data-act="m" ${d}>فاتتني</button>`;
+  return `<td data-l="الحضور" class="att">${h}</td>`;
+}
+
+const attSig = () => {
+  const n = new Date(), wk = weekKey(n);
+  return wk + mine().map(x => occAt(wk, x).s <= n ? 1 : 0).join("") +
+    missedList().map(m => altsOf(m.row, m.w).map(a => a.oc.s <= n ? 1 : 0).join("")).join("");
+};
+
+function renderAtt(){
+  sig = attSig();
+  const box = $("att"), rows = mine(), wk = weekKey(new Date()), cur = att[wk] || {}, miss = missedList();
+  if (state.gp || (!rows.length && !miss.length)){ box.hidden = true; box.innerHTML = ""; return; }
+  const st = dayStats();
+  let h = `<div class="sum">`;
+  if (st.di < 0) h += `<b>لا محاضرات اليوم</b><span>محاضراتك يومي الإثنين والخميس</span>`;
+  else h += `<b>متبقي اليوم (${DAYS[st.di]}): ${st.left} من ${st.rows.length}</b>` +
+    `<span>حضرت ${st.done}</span>` + (st.missed ? `<span>فاتتك ${st.missed}</span>` : "");
+  h += `<span>فائتة لم تُعوَّض: ${miss.length}</span></div>`;
+
+  h += miss.map(({w, k, row}) => {
+    const alts = altsOf(row, w), d = `data-k="${k}" data-w="${w}"`, now = new Date();
+    let body;
+    if (!alts.length){
+      body = `<div class="alt">لا يوجد موعد بديل متاح خلال ${COMP_WEEKS} أسابيع من المحاضرة الفائتة.</div>`;
+    } else {
+      body = alts.map((a, n) => {
+        const when = `يوم ${DAYS[a.row.e.d]} ${dm.format(a.oc.s)}، ${fmt(a.row.t)}، ${a.row.e.p} (المجموعة ${a.row.g})`;
+        const tag = a.live ? " – جارية الآن" : (a.wk !== w ? " – الأسبوع التالي" : "");
+        const clash = mine().filter(z => z.e.d === a.row.e.d && overlap(z, a.row) && (att[w] || {})[rowKey(z)] !== "m");
+        return `<div class="alt"><b>${alts.length > 1 ? `موعد بديل ${n+1}: ` : "أقرب موعد بديل: "}</b>${when}${tag}` +
+          (clash.length ? `<br><b>تنبيه: يتعارض مع محاضرتك «${clash.map(z => z.e.s).join("» و«")}».</b>` : "") +
+          `<div class="acts"><button type="button" class="b-ok" data-act="k" ${d}${a.live ? "" : " disabled"}>حضرت البديل</button></div></div>`;
+      }).join("");
+    }
+    return `<div class="mk"><b>فاتتك: ${row.e.s}</b> – ${row.e.t}<br>يوم ${DAYS[row.e.d]} ${dm.format(occAt(w, row).s)}، ${fmt(row.t)}` +
+      `<div class="acts"><button type="button" class="lnk" data-act="undo" ${d}>تراجع</button></div>${body}</div>`;
+  }).join("");
+  box.innerHTML = h; box.hidden = false;
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b || b.disabled) return;
+  const {act, k, w} = b.dataset, wk = att[w] || (att[w] = {});
+  if (act === "undo") { if (wk[k] === "k") wk[k] = "m"; else delete wk[k]; }
+  else wk[k] = act;
+  if (!Object.keys(wk).length) delete att[w];
+  saveAtt(); render();
+});
+
+function tick(){ renderNext(); if (attSig() !== sig) render(); }
+
 render();
-setInterval(renderNext, 60000);
+setInterval(tick, 60000);
 </script>
 </body>
 </html>

@@ -10,16 +10,28 @@ android {
         applicationId = "com.example.schedule4th"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 6
+        versionName = "1.5"
+    }
+
+    // مفتاح توقيع ثابت داخل المشروع: كل نسخة يبنيها GitHub تُوقَّع بنفس المفتاح فتتثبّت فوق السابقة
+    // (للاستخدام الشخصي فقط. للنشر على Google Play استخدم مفتاحًا سريًا خاصًا بك).
+    signingConfigs {
+        create("shared") {
+            storeFile = file("shared.keystore")
+            storePassword = "android"
+            keyAlias = "schedule"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("shared")
+        }
         release {
             isMinifyEnabled = false
-            // للاستخدام الشخصي: توقيع نسخة release بمفتاح debug لتكون قابلة للتثبيت مباشرة.
-            // للنشر على Google Play استبدلها بمفتاح توقيع خاص بك.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("shared")
         }
     }
 
