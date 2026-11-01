@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جدول الفرقة الرابعة – شعبة علوم إدارة</title>
+<style>
+:root{
+  --ink:#1f2b4d; --line:#1f2b4d; --paper:#eef3fb; --rule:#c9d6ec; --card:#fff;
+  --g:#d9f0d3; --y:#fde3a0; --b:#cfe5fb; --k:#fbc9d8; --v:#dccdf5;
+  --title:#f9a8c0; --day:#a9d3f7;
+  font-family:"Segoe UI","Noto Sans Arabic","Geeza Pro",Tahoma,system-ui,sans-serif;
+}
+:root{color-scheme:light}
+:root[data-theme="dark"]{
+    color-scheme:dark; --ink:#e8ecf5; --line:#8b97b5; --paper:#151a27; --rule:#222b40; --card:#1d2434;
+    --g:#26402b; --y:#4b3e1b; --b:#1f3652; --k:#4e2737; --v:#392e56;
+    --title:#7a3b55; --day:#27476b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--ink); line-height:1.6;
+  background:repeating-linear-gradient(transparent 0 33px,var(--rule) 33px 34px),var(--paper);
+}
+.wrap{max-width:62rem; margin:0 auto; padding:1.25rem 1rem 3rem}
+header{text-align:center; margin-block:.5rem 1.5rem}
+h1{
+  display:inline-block; margin:0; padding:.55rem 1.4rem; font-size:clamp(1.25rem,4.5vw,2rem); line-height:1.4;
+  background:var(--title); border:3px solid var(--line); border-radius:18px; box-shadow:5px 5px 0 var(--line);
+}
+.term{margin:.9rem 0 0; font-weight:700; font-size:1.05rem}
+
+fieldset.picker{border:0; margin:0 auto 1rem; padding:0; max-width:34rem}
+.picker legend{padding:0; margin:0 auto .6rem; font-weight:700; font-size:1.1rem; text-align:center}
+.picker .opts{display:grid; grid-template-columns:1fr 1fr; gap:.8rem}
+.picker label{position:relative; display:block}
+.picker input{position:absolute; opacity:0; inset:0; margin:0; cursor:pointer}
+.picker span{
+  display:flex; align-items:center; justify-content:center; min-height:3.5rem; padding:.4rem;
+  font-size:1.15rem; font-weight:800; background:var(--card); border:3px solid var(--line); border-radius:16px;
+  box-shadow:4px 4px 0 var(--line);
+}
+.picker input:checked + span{background:var(--ink); color:var(--paper); transform:translate(3px,3px); box-shadow:1px 1px 0 var(--line)}
+.picker input:focus-visible + span{outline:3px solid #2f7de1; outline-offset:3px}
+.picker input:active + span{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--line)}
+
+#note{margin:1rem auto; max-width:46rem; padding:.7rem 1rem; text-align:center; background:var(--card); border:2px dashed var(--line); border-radius:12px}
+#note:empty{display:none}
+
+h2{margin:1.8rem 0 .2rem; font-size:1.3rem}
+.hint{margin:.2rem 0 .6rem; font-size:.95rem; opacity:.85}
+.day h3{margin:1rem 0 .1rem; padding:.45rem 1rem; text-align:center; font-size:1.2rem; background:var(--day); border:3px solid var(--line); border-radius:14px}
+
+table{width:100%; border-collapse:separate; border-spacing:0 8px}
+th{padding:.4rem .8rem; text-align:start; font-size:.95rem; background:var(--k); border-block:2px solid var(--line)}
+th:first-child{border-inline-start:2px solid var(--line); border-start-start-radius:12px; border-end-start-radius:12px}
+th:last-child{border-inline-end:2px solid var(--line); border-start-end-radius:12px; border-end-end-radius:12px}
+td{padding:.6rem .8rem; vertical-align:middle; background:var(--t); border-block:2px solid var(--line)}
+td:first-child{border-inline-start:2px solid var(--line); border-start-start-radius:12px; border-end-start-radius:12px}
+td:last-child{border-inline-end:2px solid var(--line); border-start-end-radius:12px; border-end-end-radius:12px}
+td b{display:block}
+td small{display:block; font-size:.92rem; font-weight:600; opacity:.85}
+.c-g{--t:var(--g)} .c-y{--t:var(--y)} .c-b{--t:var(--b)} .c-k{--t:var(--k)} .c-v{--t:var(--v)}
+.tm{unicode-bidi:isolate; white-space:nowrap; display:inline-block; font-weight:800; font-variant-numeric:tabular-nums}
+.gb{display:inline-block; padding:0 .7rem; background:var(--card); border:2px solid var(--line); border-radius:99px; font-weight:700; font-size:.92rem}
+
+.bar{margin:1.6rem 0 0; display:flex; flex-wrap:wrap; gap:.8rem; justify-content:center}
+.bar[hidden]{display:none}
+#toggle,#gpBtn,#copy{
+  min-height:3rem; padding:.5rem 1.6rem; font:inherit; font-weight:800; font-size:1.05rem; color:var(--ink); cursor:pointer;
+  background:var(--y); border:3px solid var(--line); border-radius:16px; box-shadow:4px 4px 0 var(--line);
+}
+#toggle:active,#gpBtn:active,#copy:active{transform:translate(3px,3px); box-shadow:1px 1px 0 var(--line)}
+#toggle:focus-visible,#gpBtn:focus-visible,#copy:focus-visible,#theme:focus-visible,.tabs button:focus-visible,.sup select:focus-visible{outline:3px solid #2f7de1; outline-offset:3px}
+#gpBtn{background:var(--v)}
+#gpBar{margin-top:.2rem}
+#copy{background:var(--g)}
+.top{display:flex; justify-content:flex-end}
+#theme{min-height:2.4rem; padding:.2rem 1rem; font:inherit; font-weight:700; color:var(--ink); background:var(--card); border:2px solid var(--line); border-radius:99px; cursor:pointer}
+.sup{max-width:34rem; margin:0 auto 1rem}
+.sup label{display:block; margin-bottom:.4rem; font-weight:700; text-align:center}
+.sup select{width:100%; min-height:3rem; padding:.4rem .8rem; font:inherit; font-weight:700; color:var(--ink); background:var(--card); border:3px solid var(--line); border-radius:14px}
+.next{margin:1rem 0; padding:.7rem 1rem; background:var(--card); border:3px solid var(--line); border-inline-start-width:10px; border-radius:16px; box-shadow:4px 4px 0 var(--line)}
+.next.now{background:var(--g)}
+.next small{display:block; font-weight:700; opacity:.8}
+.tabs{display:none; gap:.6rem; margin-top:1rem}
+.tabs[hidden]{display:none!important}
+.tabs button{flex:1; min-height:2.8rem; font:inherit; font-weight:800; color:var(--ink); background:var(--card); border:3px solid var(--line); border-radius:14px; cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--day)}
+#rest{border-top:3px dotted var(--line); margin-top:1.4rem}
+
+@media (max-width:640px){
+  .wrap{padding-inline:.75rem}
+  table,tbody,tr,td{display:block}
+  thead{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+  tr{margin-block:.7rem; background:var(--t); border:2px solid var(--line); border-radius:14px; overflow:hidden}
+  td,td:first-child,td:last-child{
+    display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.45rem .9rem;
+    border:0; border-radius:0; background:none; border-top:1px dashed var(--line);
+  }
+  td:first-child{display:block; border-top:0; padding-block:.7rem; font-size:1.05rem}
+  td::before{content:attr(data-l); font-weight:600; opacity:.75}
+  td:first-child::before{content:none}
+  td:empty{display:none!important}
+  .tabs{display:flex}
+  body[data-day="0"] .day[data-d="1"], body[data-day="1"] .day[data-d="0"]{display:none}
+}
+@media (prefers-reduced-motion:reduce){.picker span,#toggle,#gpBtn,#copy{transform:none!important}}
+</style>
+<script>try{var t=localStorage.getItem("theme");if(!t&&matchMedia("(prefers-color-scheme:dark)").matches)t="dark";if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><button type="button" id="theme"></button></div>
+  <header>
+    <h1>جدول الفرقة الرابعة – شعبة علوم إدارة</h1>
+    <p class="term">الترم الأول 2026 / 2027</p>
+  </header>
+
+  <fieldset class="picker">
+    <legend>اختر مجموعتك</legend>
+    <div class="opts">
+      <label><input type="radio" name="grp" value="1"><span>المجموعة الأولى</span></label>
+      <label><input type="radio" name="grp" value="2"><span>المجموعة الثانية</span></label>
+    </div>
+  </fieldset>
+  <div class="sup"><label for="sup">مشرف مشروع التخرج (اختياري)</label><select id="sup"></select></div>
+  <div class="bar" id="gpBar">
+    <button type="button" id="gpBtn">إظهار مشروع التخرج فقط</button>
+  </div>
+
+  <p id="note" aria-live="polite"></p>
+  <div class="next" id="next" hidden></div>
+  <div class="tabs" id="tabs" role="group" aria-label="اليوم" hidden>
+    <button type="button" data-day="0">الإثنين</button><button type="button" data-day="1">الخميس</button>
+  </div>
+  <section id="main" aria-live="polite"></section>
+  <div class="bar" id="bar" hidden>
+    <button type="button" id="copy">نسخ جدولي</button>
+    <button type="button" id="toggle" aria-expanded="false" aria-controls="rest">إظهار باقي الجدول</button>
+  </div>
+  <section id="rest" hidden></section>
+</main>
+
+<script>
+// d: 0 = الإثنين، 1 = الخميس | c: لون الصف كما في الجدول الأصلي
+// sl: [المجموعة (null = بدون مجموعة (مشروع التخرج)), الوقت كما ورد]
+const DAYS = ["الإثنين", "الخميس"];
+const E = [
+  {d:0, c:"g", s:"إدارة المشروعات", t:"د/ سعد شاهين", p:"مدرج إيزيس", sl:[[2,"8:30–9:30"],[1,"9:30–10:30"]]},
+  {d:0, c:"y", s:"إدارة مالية متقدمة", t:"د/ هيكل عبدة", p:"قاعة توفيق الحكيم", sl:[[1,"8:30–9:30"],[2,"9:30–10:30"]]},
+  {d:0, c:"b", s:"الأساليب الكمية واتخاذ القرار", t:"د/ نور الدين", p:"قاعة عباس العقاد", sl:[[1,"10:30–11:30"],[2,"11:30–12:30"]]},
+  {d:0, c:"k", s:"إدارة المحافظ المالية والمشتقات", t:"د/ هيكل عبدة", p:"قاعة توفيق الحكيم", sl:[[2,"10:30–11:30"],[1,"11:30–12:30"]]},
+  {d:0, c:"v", s:"مشروع التخرج", t:"د/ عبد الحكيم", p:"قاعة توفيق الحكيم", sl:[[null,"12:30–2:30"]]},
+  {d:1, c:"g", s:"الأساليب الكمية واتخاذ القرار – سكشن", t:"د/ إسلام محمد", p:"قاعة طه حسين", sl:[[1,"8:30–9:30"],[2,"9:30–10:30"]]},
+  {d:1, c:"b", s:"مبادئ المالية العامة – سكشن", t:"أ/ فاطمة جمعة", p:"قاعة أحمد زويل", sl:[[2,"8:30–9:30"],[1,"9:30–10:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"أ.د/ السيد متولي", p:"قاعة نجيب محفوظ", sl:[[null,"8:30–10:30"]]},
+  {d:1, c:"y", s:"مبادئ المالية العامة", t:"د/ رشا مصطفى", p:"قاعة عباس العقاد", sl:[[1,"10:30–11:30"],[2,"11:30–12:30"]]},
+  {d:1, c:"k", s:"مشروع التخرج", t:"د/ رشا مصطفى", p:"قاعة نجيب محفوظ", sl:[[null,"12:30–2:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ نهى أحمد", p:"قاعة طه حسين", sl:[[null,"12:30–2:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ مروة عاصم", p:"قاعة عباس العقاد", sl:[[null,"12:30–2:30"]]},
+  {d:0, c:"v", s:"مشروع التخرج", t:"د/ سعد شاهين", p:"قاعة أحمد زويل", sl:[[null,"1:30–3:30"]]},
+  {d:0, c:"v", s:"مشروع التخرج", t:"د/ علاء جبر", p:"قاعة عباس العقاد", sl:[[null,"1:30–3:30"]]},
+  {d:0, c:"v", s:"مشروع التخرج", t:"د/ هيكل عبدة", p:"قاعة مجدي يعقوب", sl:[[null,"1:30–3:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ سميه رمضان", p:"قاعة مجدي يعقوب", sl:[[null,"8:30–10:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ رشدى فاروق", p:"قاعة مجدي يعقوب", sl:[[null,"10:30–12:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ أحمد يونس", p:"قاعة أحمد زويل", sl:[[null,"10:30–12:30"]]},
+  {d:1, c:"v", s:"مشروع التخرج", t:"د/ علاء عوض", p:"قاعة توفيق الحكيم", sl:[[null,"10:30–12:30"]]}
+];
+const NAME = {1:"الأولى", 2:"الثانية"};
+const $ = id => document.getElementById(id);
+const state = {g:null, open:false, gp:false, sup:""};
+const view = {rows:[]};
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k,v) => { try { localStorage.setItem(k,v); } catch (e) {} }
+};
+
+// الساعات 1–6 تُحسب بعد الظهر
+const toMin = t => { const [h,m] = t.split(":").map(Number); return (h < 7 ? h + 12 : h)*60 + m; };
+const start = t => toMin(t.split("–")[0]);
+const end = t => toMin(t.split("–")[1]);
+// صيغة العرض: من 8:30 إلى 9:30
+const fmt = t => { const [a,b] = t.split("–"); return `من ${a} إلى ${b}`; };
+
+const cmp = (a,b) => a.e.d - b.e.d || start(a.t) - start(b.t) || a.i - b.i;
+const pick = f => E.flatMap((e,i) => e.sl.filter(s => f(s[0])).map(s => ({e, i, g:s[0], t:s[1]}))).sort(cmp);
+const grad = () => pick(() => true).filter(x => x.e.s === "مشروع التخرج");
+const bare = n => n.replace(/^[^/]*\/\s*/, "");
+const SUPS = [...new Set(E.filter(e => e.s === "مشروع التخرج").map(e => e.t))].sort((a,b) => bare(a).localeCompare(bare(b), "ar"));
+
+function table(rows){
+  const hg = rows.some(x => x.g); // جدول مشروع التخرج وحده يُعرض بدون عمود المجموعة
+  return DAYS.map((day,di) => {
+    const r = rows.filter(x => x.e.d === di);
+    if (!r.length) return "";
+    return `<div class="day" data-d="${di}"><h3>يوم ${day}</h3><table><thead><tr><th>المادة</th><th>المكان</th>${hg ? "<th>المجموعة</th>" : ""}<th>الوقت</th></tr></thead><tbody>` +
+      r.map(x => `<tr class="c-${x.e.c}"><td><b>${x.e.s}</b><small>${x.e.t}</small></td>` +
+        `<td data-l="المكان">${x.e.p}</td>` +
+        (hg ? `<td data-l="المجموعة">${x.g ? `<span class="gb">مجموعة ${x.g}</span>` : ""}</td>` : "") +
+        `<td data-l="الوقت"><span class="tm">${fmt(x.t)}</span></td></tr>`).join("") +
+      `</tbody></table></div>`;
+  }).join("");
+}
+
+// أقرب محاضرة (أو الجارية الآن) بحسب تاريخ ووقت الجهاز
+function nextOf(rows){
+  const n = new Date(), dow = n.getDay(), cur = n.getHours()*60 + n.getMinutes();
+  let best = null;
+  rows.forEach(x => {
+    let diff = ((x.e.d ? 4 : 1) - dow + 7) % 7;
+    const now = diff === 0 && start(x.t) <= cur && cur < end(x.t);
+    if (diff === 0 && end(x.t) <= cur) diff = 7;
+    const key = now ? -1 : diff*1440 + start(x.t);
+    if (!best || key < best.key) best = {x, now, diff, key};
+  });
+  return best;
+}
+function renderNext(){
+  const el = $("next"), b = (!state.gp && view.rows.length) ? nextOf(view.rows) : null;
+  el.hidden = !b;
+  if (!b) return;
+  const day = b.diff === 0 ? "اليوم" : b.diff === 1 ? "غدًا" : `يوم ${DAYS[b.x.e.d]}`;
+  el.className = "next" + (b.now ? " now" : "");
+  el.innerHTML = `<small>${b.now ? "جارية الآن" : "المحاضرة القادمة"}</small><b>${b.x.e.s}</b> – ${b.x.e.t}<br>${b.now ? "" : day + "، "}${fmt(b.x.t)}، ${b.x.e.p}`;
+}
+
+let counts = {};
+function renderNote(){
+  const g = state.g;
+  $("note").textContent = (!g || state.open) ? "" :
+    `المعروض الآن: مواعيد المجموعة ${NAME[g]}${state.sup ? " ومشروع التخرج الخاص بك" : " فقط"}. باقي الجدول (${counts.rest} عنصرًا) يشمل مواعيد المجموعة ${NAME[3-g]} ومواعيد مشروع التخرج${state.sup ? " للمشرفين الآخرين" : ""}، ويظهر بزر «إظهار باقي الجدول».`;
+}
+
+function sync(){
+  $("rest").hidden = !state.open;
+  $("toggle").setAttribute("aria-expanded", state.open);
+  $("toggle").textContent = state.open ? "إخفاء باقي الجدول" : "إظهار باقي الجدول";
+  renderNote();
+}
+
+function render(){
+  const g = state.g;
+  $("gpBtn").textContent = state.gp ? "العودة للجدول" : "إظهار مشروع التخرج فقط";
+  const supRows = state.sup ? grad().filter(x => x.e.t === state.sup) : [];
+  const rows = state.gp ? grad() : (g ? pick(x => x === g) : []).concat(supRows).sort(cmp);
+  const head = state.gp ? "مواعيد مشروع التخرج" : g ? `جدول المجموعة ${NAME[g]}` : "جدولي";
+  view.rows = rows;
+  $("main").innerHTML = rows.length ? `<h2>${head}</h2>` + table(rows) : "";
+  $("tabs").hidden = !rows.length;
+  $("bar").hidden = state.gp || !rows.length;
+  $("toggle").hidden = !g;
+  $("rest").hidden = true;
+  if (!g || state.gp){
+    $("note").textContent = (!g && !state.gp) ? "اختر المجموعة الأولى أو الثانية ليظهر جدولك." : "";
+    renderNext();
+    return;
+  }
+  const o = 3 - g, other = pick(x => x === o), gradRows = grad().filter(x => x.e.t !== state.sup);
+  counts = {rest: other.length + gradRows.length};
+  $("rest").innerHTML =
+    `<h2>مواعيد المجموعة ${NAME[o]}</h2>` + table(other) +
+    `<h2>مواعيد مشروع التخرج${state.sup ? " (باقي المشرفين)" : ""}</h2>` + table(gradRows);
+  sync();
+  renderNext();
+}
+
+// ----- الوضع الفاتح / الداكن -----
+const applyTheme = t => {
+  document.documentElement.dataset.theme = t;
+  $("theme").textContent = t === "dark" ? "الوضع الفاتح" : "الوضع الداكن";
+};
+applyTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
+$("theme").addEventListener("click", () => {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(t); store.set("theme", t);
+});
+
+// ----- تبويب الأيام (يعمل على الشاشات الصغيرة فقط) -----
+function setDay(d){
+  document.body.dataset.day = d;
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.day === String(d)));
+}
+const dw = new Date().getDay();
+setDay(dw >= 2 && dw <= 4 ? 1 : 0);
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setDay(b.dataset.day); });
+
+// ----- استرجاع الاختيارات المحفوظة -----
+const sel = $("sup");
+sel.innerHTML = `<option value="">لم أحدد بعد</option>` + SUPS.map(t => `<option>${t}</option>`).join("");
+const sg = store.get("grp");
+if (sg === "1" || sg === "2"){ state.g = +sg; document.querySelector(`input[name="grp"][value="${sg}"]`).checked = true; }
+const ss = store.get("sup");
+if (SUPS.includes(ss)) state.sup = ss;
+sel.value = state.sup;
+
+document.querySelectorAll('input[name="grp"]').forEach(r =>
+  r.addEventListener("change", () => { state.g = +r.value; state.gp = false; store.set("grp", r.value); render(); }));
+sel.addEventListener("change", () => { state.sup = sel.value; state.gp = false; store.set("sup", sel.value); render(); });
+$("gpBtn").addEventListener("click", () => { state.gp = !state.gp; render(); });
+$("toggle").addEventListener("click", () => { state.open = !state.open; sync(); });
+
+// ----- نسخ الجدول كنص -----
+const scheduleText = rows =>
+  `جدول الفرقة الرابعة – شعبة علوم إدارة${state.g ? ` (المجموعة ${NAME[state.g]})` : ""}\nالترم الأول 2026 / 2027` +
+  DAYS.map((d,i) => {
+    const r = rows.filter(x => x.e.d === i);
+    return r.length ? `\n\nيوم ${d}\n` + r.map(x => `• ${fmt(x.t)} | ${x.e.s} (${x.e.t}) | ${x.e.p}`).join("\n") : "";
+  }).join("");
+$("copy").addEventListener("click", async () => {
+  const txt = scheduleText(view.rows), btn = $("copy");
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch (e) {
+    const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand("copy"); } catch (e2) {}
+    ta.remove();
+  }
+  btn.textContent = ok ? "تم النسخ" : "تعذّر النسخ";
+  setTimeout(() => { btn.textContent = "نسخ جدولي"; }, 1800);
+});
+
+render();
+setInterval(renderNext, 60000);
+</script>
+</body>
+</html>
