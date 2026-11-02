@@ -98,6 +98,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         notifyPage(); // مثلًا عند العودة من إعدادات الإشعارات
+        web.evaluateJavascript("window.tick&&window.tick()", null); // تحديث الصفحة (مثلًا بعد تغيّر اليوم)
     }
 
     @Override
