@@ -44,11 +44,13 @@ jobs:
           echo "tag=v${VERSION_NAME:-1.0}-build.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       # رفع الـ APK في Releases (ينشئ release جديد لكل بناء)
+      # generate_release_notes: GitHub يكتب تلقائيًا «What's Changed» من الـ commits
       - name: Publish APK to Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: Schedule4th v${{ steps.ver.outputs.name }} (build ${{ github.run_number }})
+          generate_release_notes: true
           body: |
             بناء تلقائي من commit `${{ github.sha }}`
 
