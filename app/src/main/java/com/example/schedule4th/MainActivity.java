@@ -26,6 +26,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Reminders.ensureChannel(this); // عند بدء التطبيق، حتى تظهر إعدادات الإشعارات للتطبيق
 
         web = new WebView(this);
         web.setBackgroundColor(Color.TRANSPARENT);
@@ -95,8 +96,15 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        web.onPause(); // تُعتبر الصفحة مخفية فيعمل visibilitychange. لا يوقف JavaScript.
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        web.onResume();
         notifyPage(); // مثلًا عند العودة من إعدادات الإشعارات
         web.evaluateJavascript("window.tick&&window.tick()", null); // تحديث الصفحة (مثلًا بعد تغيّر اليوم)
     }

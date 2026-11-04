@@ -95,11 +95,17 @@ final class Reminders {
         scheduleOne(ctx, i, it, lead, Math.max(now, start - lead * 60000L));
     }
 
-    private static void notifyLecture(Context ctx, int i, JSONObject it, int lead, long start) {
+    /** تُنشأ القناة عند بدء التطبيق وقبل كل إشعار. الاستدعاء المتكرر آمن: إعادة إنشائها بنفس القيم لا تفعل شيئًا. */
+    static NotificationManager ensureChannel(Context ctx) {
         NotificationManager nm = ctx.getSystemService(NotificationManager.class);
         NotificationChannel ch = new NotificationChannel(CHANNEL, "تذكير المحاضرات", NotificationManager.IMPORTANCE_HIGH);
         ch.setDescription("تنبيه قبل بداية كل محاضرة");
         nm.createNotificationChannel(ch);
+        return nm;
+    }
+
+    private static void notifyLecture(Context ctx, int i, JSONObject it, int lead, long start) {
+        NotificationManager nm = ensureChannel(ctx);
 
         Intent open = new Intent(ctx, MainActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
