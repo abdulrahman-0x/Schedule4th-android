@@ -6,7 +6,7 @@ on:
   workflow_dispatch:   # يتيح التشغيل اليدوي من تبويب Actions
 
 permissions:
-  contents: read
+  contents: write # مطلوب لإنشاء Release ورفع الـ APK
 
 jobs:
   build:
@@ -32,3 +32,32 @@ jobs:
           name: Schedule4th-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # تجهيز اسم النسخة من versionName + رقم التشغيل
+      - name: Read app version
+        id: ver
+        run: |
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -n1)
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -n1)
+          echo "name=${VERSION_NAME:-1.0}" >> "$GITHUB_OUTPUT"
+          echo "code=${VERSION_CODE:-0}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION_NAME:-1.0}-build.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      # رفع الـ APK في Releases (ينشئ release جديد لكل بناء)
+      # generate_release_notes: ملاحظات GitHub التلقائية تُبنى من الـ Pull Requests المدمجة (لا من الـ commits المباشرة)،
+      # فمع الرفع المباشر إلى main يظهر غالبًا رابط المقارنة فقط. نص body يُضاف قبلها.
+      - name: Publish APK to Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: Schedule4th v${{ steps.ver.outputs.name }} (build ${{ github.run_number }})
+          generate_release_notes: true
+          body: |
+            بناء تلقائي من commit `${{ github.sha }}`
+
+            - النسخة: ${{ steps.ver.outputs.name }} (versionCode ${{ steps.ver.outputs.code }})
+            - الفرع: `${{ github.ref_name }}`
+            - APK: debug (غير موقّع للنشر على Google Play)
+          files: app/build/outputs/apk/debug/app-debug.apk
+          fail_on_unmatched_files: true
+          make_latest: true

@@ -10,8 +10,8 @@ android {
         applicationId = "com.example.schedule4th"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 8
+        versionName = "1.7"
     }
 
     // مفتاح توقيع ثابت داخل المشروع: كل نسخة يبنيها GitHub تُوقَّع بنفس المفتاح فتتثبّت فوق السابقة
