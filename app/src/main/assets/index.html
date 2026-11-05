@@ -487,7 +487,6 @@ document.addEventListener("click", e => {
   saveAtt(); render();
 });
 function tick(){ const reset = rollDay(); renderNext(); if (reset || attSig() !== sig) render(); }
-window.tick = tick; // يستدعيه MainActivity عند onResume (تغيّر اليوم/الوقت)
 
 render();
 setInterval(tick, 60000);
